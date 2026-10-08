@@ -44,3 +44,7 @@ All stages are planning targets, not delivered functionality.
 
 ## Test policy
 Run focused tests for changed modules, not repeated full suites without a reason. Surface stalled calculations, unavailable sources and retries explicitly.
+
+## Cross-cutting UI requirement
+- [ ] First-launch language picker: Русский / English; local persistence, no account or location request.
+- [ ] Runtime language switching in Settings and complete ru/en translation coverage including errors and accessibility labels.
