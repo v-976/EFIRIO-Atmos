@@ -27,3 +27,6 @@ Server/CDN/tile/geocoder providers can potentially see IP addresses, request tim
 
 ## Before public deployment
 Perform threat modelling, dependency and license audit, configuration review, API abuse tests, privacy review of map/geocoding providers and a clear public privacy notice. Privacy claims must describe actual deployed behavior, not merely design intent.
+
+## Localization preferences
+The selected interface language is stored locally only. The first-launch language picker requires no registration or geolocation. No user language preference is saved server-side.
