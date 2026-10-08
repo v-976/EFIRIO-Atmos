@@ -256,6 +256,32 @@ select:focus-visible {
   line-height: 1.35;
 }
 
+.station-selection-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 10px;
+  color: #626568;
+  font-size: 0.72rem;
+}
+
+.station-selection-row button {
+  min-height: 32px;
+  padding: 4px 9px;
+  border: 1px solid #aeb0ad;
+  border-radius: 8px;
+  color: #202225;
+  background: #fff;
+  cursor: pointer;
+  font-size: 0.7rem;
+  font-weight: 650;
+}
+
+.station-selection-row button:hover {
+  background: #ededeb;
+}
+
 .measurements {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -302,6 +328,52 @@ select:focus-visible {
 
 .source-attribution span {
   margin-top: 2px;
+}
+
+.station-map-key {
+  position: absolute;
+  z-index: 2;
+  top: 202px;
+  right: 10px;
+  display: grid;
+  gap: 5px;
+  padding: 8px;
+  border: 1px solid rgb(32 34 37 / 18%);
+  border-radius: 9px;
+  background: rgb(250 250 248 / 92%);
+  box-shadow: 0 4px 15px rgb(32 34 37 / 12%);
+  color: #4f5255;
+  font-size: 0.64rem;
+  backdrop-filter: blur(8px);
+}
+
+.station-map-key span {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.station-key-dot {
+  width: 10px;
+  height: 10px;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  background: #73777b;
+  box-shadow: 0 0 0 1px #303338;
+}
+
+.station-key-dot--automatic {
+  background: #fff;
+  box-shadow: 0 0 0 2px #202225;
+}
+
+.station-key-dot--manual {
+  background: #202225;
+  box-shadow: 0 0 0 2px #202225;
+}
+
+.station-key-dot--stale {
+  background: #a7874a;
 }
 
 .settings-backdrop {
@@ -440,6 +512,11 @@ select:focus-visible {
   .maplibregl-ctrl-top-right {
     top: 78px;
     right: 0;
+  }
+
+  .station-map-key {
+    top: 185px;
+    right: 6px;
   }
 }
 

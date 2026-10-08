@@ -4,6 +4,7 @@ import type {
   ObservationProvider,
   ObservationVariable,
   StationObservation,
+  StationSearchResult,
 } from './types'
 
 const FMI_WFS_URL = 'https://opendata.fmi.fi/wfs'
@@ -231,19 +232,27 @@ function rankStations(stations: ParsedStation[], point: GeoPoint, radiusKm: numb
 }
 
 function toObservation(
-  candidate: ReturnType<typeof rankStations>[number],
+  station: ParsedStation,
+  point: GeoPoint,
   now: number,
 ): StationObservation {
+  const measurements = Object.values(station.measurements).filter(
+    (measurement): measurement is ObservationMeasurement => Boolean(measurement),
+  )
+  const latestTime = Math.max(...measurements.map((measurement) => Date.parse(measurement.observedAt)))
+  const hasData = Number.isFinite(latestTime)
+
   return {
     station: {
-      id: candidate.station.id,
-      name: candidate.station.name,
-      location: candidate.station.location,
-      distanceKm: candidate.distance,
+      id: station.id,
+      name: station.name,
+      location: station.location,
+      distanceKm: distanceKm(point, station.location),
     },
-    measurements: candidate.station.measurements,
-    lastObservedAt: new Date(candidate.latestTime).toISOString(),
-    isStale: now - candidate.latestTime > FRESHNESS_LIMIT_MS,
+    measurements: station.measurements,
+    lastObservedAt: hasData ? new Date(latestTime).toISOString() : null,
+    hasData,
+    isStale: !hasData || now - latestTime > FRESHNESS_LIMIT_MS,
     source: {
       id: 'fmi',
       name: 'Finnish Meteorological Institute (FMI)',
@@ -254,9 +263,25 @@ function toObservation(
   }
 }
 
+function toSearchResult(
+  stations: ParsedStation[],
+  point: GeoPoint,
+  radiusKm: number,
+  automaticStationId: string | null,
+  now: number,
+): StationSearchResult | null {
+  const observations = stations
+    .map((station) => toObservation(station, point, now))
+    .filter((observation) => observation.station.distanceKm <= radiusKm)
+    .sort((first, second) => first.station.distanceKm - second.station.distanceKm)
+
+  if (observations.length === 0) return null
+  return { stations: observations, automaticStationId, searchRadiusKm: radiusKm }
+}
+
 export const fmiObservationProvider: ObservationProvider = {
   id: 'fmi',
-  async findNearest(point, signal) {
+  async findNearby(point, signal) {
     const now = Date.now()
     const collectedStations = new Map<string, ParsedStation>()
     let staleCandidate: ReturnType<typeof rankStations>[number] | undefined
@@ -271,11 +296,25 @@ export const fmiObservationProvider: ObservationProvider = {
       for (const radius of radiiToEvaluate) {
         const candidates = rankStations(Array.from(collectedStations.values()), point, radius, now)
         const freshCandidate = candidates.find((candidate) => candidate.isFresh)
-        if (freshCandidate) return toObservation(freshCandidate, now)
+        if (freshCandidate) {
+          return toSearchResult(
+            Array.from(collectedStations.values()),
+            point,
+            radius,
+            freshCandidate.station.id,
+            now,
+          )
+        }
         staleCandidate ||= candidates[0]
       }
     }
 
-    return staleCandidate ? toObservation(staleCandidate, now) : null
+    return toSearchResult(
+      Array.from(collectedStations.values()),
+      point,
+      SEARCH_RADII_KM.at(-1)!,
+      staleCandidate?.station.id || null,
+      now,
+    )
   },
 }

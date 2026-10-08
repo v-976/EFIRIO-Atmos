@@ -5,13 +5,26 @@ import { WeatherCard } from './components/WeatherCard'
 import { createTranslator } from './i18n'
 import { loadSettings, saveSettings, type Settings } from './settings'
 import { useWeatherObservation } from './weather/useWeatherObservation'
+import type { StationObservation } from './weather/types'
 
 export function App() {
   const [settings, setSettings] = useState<Settings>(loadSettings)
   const [selectedPoint, setSelectedPoint] = useState<SelectedPoint | null>(null)
+  const [manualStationId, setManualStationId] = useState<string | null>(null)
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
   const t = useMemo(() => createTranslator(settings.language), [settings.language])
   const weatherState = useWeatherObservation(selectedPoint)
+  const searchResult = weatherState.status === 'success' ? weatherState.result : null
+  const selectedStation: StationObservation | null = searchResult
+    ? searchResult.stations.find(
+        (station) => station.station.id === (manualStationId || searchResult.automaticStationId),
+      ) || null
+    : null
+
+  const handlePointSelection = (point: SelectedPoint) => {
+    setManualStationId(null)
+    setSelectedPoint(point)
+  }
 
   useEffect(() => {
     document.documentElement.lang = settings.language
@@ -33,7 +46,11 @@ export function App() {
       <MapView
         language={settings.language}
         selectedPoint={selectedPoint}
-        onSelectPoint={setSelectedPoint}
+        stations={searchResult?.stations || []}
+        automaticStationId={searchResult?.automaticStationId || null}
+        manualStationId={manualStationId}
+        onSelectPoint={handlePointSelection}
+        onSelectStation={setManualStationId}
         t={t}
       />
 
@@ -64,7 +81,14 @@ export function App() {
         ) : (
           <p className="point-hint">{t('selectPointHint')}</p>
         )}
-        <WeatherCard state={weatherState} settings={settings} t={t} />
+        <WeatherCard
+          state={weatherState}
+          observation={selectedStation}
+          isManualSelection={Boolean(manualStationId)}
+          onUseAutomatic={() => setManualStationId(null)}
+          settings={settings}
+          t={t}
+        />
       </aside>
 
       {isSettingsOpen && (

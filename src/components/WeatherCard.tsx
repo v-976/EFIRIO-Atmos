@@ -2,9 +2,13 @@ import type { Translate } from '../i18n'
 import type { Settings } from '../settings'
 import type { WeatherState } from '../weather/useWeatherObservation'
 import type { ObservationMeasurement, ObservationVariable } from '../weather/types'
+import type { StationObservation } from '../weather/types'
 
 interface WeatherCardProps {
   state: WeatherState
+  observation: StationObservation | null
+  isManualSelection: boolean
+  onUseAutomatic: () => void
   settings: Settings
   t: Translate
 }
@@ -46,7 +50,14 @@ function displayMeasurement(measurement: ObservationMeasurement, settings: Setti
   return `${value.toFixed(digits)} ${unit}`
 }
 
-export function WeatherCard({ state, settings, t }: WeatherCardProps) {
+export function WeatherCard({
+  state,
+  observation,
+  isManualSelection,
+  onUseAutomatic,
+  settings,
+  t,
+}: WeatherCardProps) {
   if (state.status === 'idle') {
     return <div className="data-status">{t('weatherSelectPoint')}</div>
   }
@@ -65,7 +76,10 @@ export function WeatherCard({ state, settings, t }: WeatherCardProps) {
     return <div className="data-status data-status--error">{t('weatherError')}</div>
   }
 
-  const { observation } = state
+  if (!observation) {
+    return <div className="data-status data-status--warning">{t('weatherNoStation')}</div>
+  }
+
   return (
     <section className="weather-card">
       <div className="station-header">
@@ -76,11 +90,24 @@ export function WeatherCard({ state, settings, t }: WeatherCardProps) {
           </span>
         </div>
         <span className={`freshness-badge ${observation.isStale ? 'freshness-badge--stale' : ''}`}>
-          {observation.isStale ? t('weatherStale') : t('weatherFresh')}
+          {!observation.hasData ? t('noData') : observation.isStale ? t('weatherStale') : t('weatherFresh')}
         </span>
       </div>
 
-      {observation.isStale && <p className="stale-warning">{t('weatherStaleWarning')}</p>}
+      <div className="station-selection-row">
+        <span>{isManualSelection ? t('manualSelection') : t('automaticSelection')}</span>
+        {isManualSelection && (
+          <button type="button" onClick={onUseAutomatic}>
+            {t('useAutomaticStation')}
+          </button>
+        )}
+      </div>
+
+      {!observation.hasData ? (
+        <p className="stale-warning">{t('stationNoMeasurements')}</p>
+      ) : (
+        observation.isStale && <p className="stale-warning">{t('weatherStaleWarning')}</p>
+      )}
 
       <dl className="measurements">
         {DISPLAYED_VARIABLES.map((variable) => {
@@ -109,7 +136,8 @@ export function WeatherCard({ state, settings, t }: WeatherCardProps) {
           {observation.source.license}
         </a>
         <span>
-          {t('lastObservation')}: {formatDate(observation.lastObservedAt, settings.language)}
+          {t('lastObservation')}:{' '}
+          {observation.lastObservedAt ? formatDate(observation.lastObservedAt, settings.language) : t('noData')}
         </span>
       </footer>
     </section>

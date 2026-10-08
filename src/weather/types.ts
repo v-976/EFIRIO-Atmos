@@ -31,7 +31,8 @@ export interface StationObservation {
     distanceKm: number
   }
   measurements: Partial<Record<ObservationVariable, ObservationMeasurement>>
-  lastObservedAt: string
+  lastObservedAt: string | null
+  hasData: boolean
   isStale: boolean
   source: {
     id: string
@@ -42,7 +43,13 @@ export interface StationObservation {
   }
 }
 
+export interface StationSearchResult {
+  stations: StationObservation[]
+  automaticStationId: string | null
+  searchRadiusKm: number
+}
+
 export interface ObservationProvider {
   readonly id: string
-  findNearest(point: GeoPoint, signal?: AbortSignal): Promise<StationObservation | null>
+  findNearby(point: GeoPoint, signal?: AbortSignal): Promise<StationSearchResult | null>
 }

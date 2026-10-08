@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react'
 import type { SelectedPoint } from '../components/MapView'
 import { fmiObservationProvider } from './fmi'
-import type { StationObservation } from './types'
+import type { StationSearchResult } from './types'
 
 export type WeatherState =
   | { status: 'idle' }
   | { status: 'loading' }
-  | { status: 'success'; observation: StationObservation }
+  | { status: 'success'; result: StationSearchResult }
   | { status: 'noStation' }
   | { status: 'error' }
 
@@ -23,9 +23,9 @@ export function useWeatherObservation(point: SelectedPoint | null): WeatherState
     setState({ status: 'loading' })
     const timer = window.setTimeout(() => {
       fmiObservationProvider
-        .findNearest(point, controller.signal)
-        .then((observation) => {
-          setState(observation ? { status: 'success', observation } : { status: 'noStation' })
+        .findNearby(point, controller.signal)
+        .then((result) => {
+          setState(result ? { status: 'success', result } : { status: 'noStation' })
         })
         .catch((error: unknown) => {
           if (error instanceof DOMException && error.name === 'AbortError') return
