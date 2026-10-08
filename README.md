@@ -52,4 +52,4 @@ Specification phase only. No installation or running service is implied by this 
 
 ## Interface languages
 
-At first launch, the user explicitly chooses **Русский** or **English**. The choice is saved only on the device and used on subsequent visits. Language can be changed anytime in Settings without restarting. Interface language is independent of measurement units, location and data sources. No geolocation permission or account is required during onboarding.
+On first launch, the UI automatically follows the browser language when supported (Russian or English); unsupported languages fall back to English. A manual language selection in Settings is stored locally and takes priority on subsequent visits. Language can be changed anytime without restarting. Interface language is independent of measurement units, location and data sources. No geolocation permission or account is required during onboarding.
