@@ -46,5 +46,5 @@ All stages are planning targets, not delivered functionality.
 Run focused tests for changed modules, not repeated full suites without a reason. Surface stalled calculations, unavailable sources and retries explicitly.
 
 ## Cross-cutting UI requirement
-- [ ] First-launch language picker: Русский / English; local persistence, no account or location request.
+- [ ] First-launch automatic browser-language detection (ru/en; English fallback for unsupported languages); manual local override, no account or location request.
 - [ ] Runtime language switching in Settings and complete ru/en translation coverage including errors and accessibility labels.
