@@ -1,14 +1,17 @@
 import { useEffect, useMemo, useState } from 'react'
 import { MapView, type SelectedPoint } from './components/MapView'
 import { SettingsPanel } from './components/SettingsPanel'
+import { WeatherCard } from './components/WeatherCard'
 import { createTranslator } from './i18n'
 import { loadSettings, saveSettings, type Settings } from './settings'
+import { useWeatherObservation } from './weather/useWeatherObservation'
 
 export function App() {
   const [settings, setSettings] = useState<Settings>(loadSettings)
   const [selectedPoint, setSelectedPoint] = useState<SelectedPoint | null>(null)
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
   const t = useMemo(() => createTranslator(settings.language), [settings.language])
+  const weatherState = useWeatherObservation(selectedPoint)
 
   useEffect(() => {
     document.documentElement.lang = settings.language
@@ -61,10 +64,7 @@ export function App() {
         ) : (
           <p className="point-hint">{t('selectPointHint')}</p>
         )}
-        <div className="data-status">
-          <span className="status-dot" aria-hidden="true" />
-          {t('weatherUnavailable')}
-        </div>
+        <WeatherCard state={weatherState} settings={settings} t={t} />
       </aside>
 
       {isSettingsOpen && (

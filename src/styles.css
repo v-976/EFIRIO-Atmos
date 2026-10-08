@@ -124,7 +124,9 @@ select:focus-visible {
 .point-panel {
   bottom: 28px;
   left: 16px;
-  width: min(360px, calc(100vw - 32px));
+  width: min(410px, calc(100vw - 32px));
+  max-height: calc(100dvh - 130px);
+  overflow-y: auto;
   padding: 16px;
 }
 
@@ -173,12 +175,133 @@ select:focus-visible {
   font-size: 0.82rem;
 }
 
-.status-dot {
-  width: 8px;
-  height: 8px;
+.data-status--warning,
+.data-status--error {
+  font-weight: 600;
+}
+
+.data-status--error {
+  color: #7c2525;
+}
+
+.status-spinner {
+  width: 14px;
+  height: 14px;
   flex: 0 0 auto;
+  border: 2px solid #b7b8b5;
+  border-top-color: #202225;
   border-radius: 50%;
-  background: #73767a;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.weather-card {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #d9d9d6;
+}
+
+.station-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.station-header strong,
+.station-header span,
+.source-attribution span {
+  display: block;
+}
+
+.station-header strong {
+  font-size: 0.92rem;
+}
+
+.station-header div > span {
+  margin-top: 2px;
+  color: #626568;
+  font-size: 0.75rem;
+}
+
+.freshness-badge {
+  flex: 0 0 auto;
+  padding: 4px 7px;
+  border: 1px solid #69736b;
+  border-radius: 999px;
+  color: #334a38;
+  background: #edf2ed;
+  font-size: 0.68rem;
+  font-weight: 700;
+}
+
+.freshness-badge--stale {
+  border-color: #8a6c34;
+  color: #624918;
+  background: #f5f0e5;
+}
+
+.stale-warning {
+  margin-top: 10px !important;
+  padding: 9px;
+  border-radius: 8px;
+  color: #624918;
+  background: #f5f0e5;
+  font-size: 0.75rem;
+  line-height: 1.35;
+}
+
+.measurements {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 7px;
+  margin: 12px 0 0;
+}
+
+.measurement {
+  min-width: 0;
+  padding: 9px;
+  border-radius: 8px;
+  background: #ececea;
+}
+
+.measurement dt {
+  color: #5c5f62;
+  font-size: 0.68rem;
+}
+
+.measurement dd {
+  margin: 3px 0 0;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.measurement small {
+  display: block;
+  margin-top: 4px;
+  color: #707275;
+  font-size: 0.6rem;
+  line-height: 1.25;
+}
+
+.source-attribution {
+  margin-top: 12px;
+  color: #64676a;
+  font-size: 0.68rem;
+  line-height: 1.5;
+}
+
+.source-attribution a {
+  color: #303338;
+}
+
+.source-attribution span {
+  margin-top: 2px;
 }
 
 .settings-backdrop {
