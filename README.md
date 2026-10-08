@@ -49,3 +49,7 @@ Project-owned code is licensed under [MIT](LICENSE). The application is intended
 ## Development
 
 Specification phase only. No installation or running service is implied by this repository. Contributions should follow `AGENTS.md`.
+
+## Interface languages
+
+At first launch, the user explicitly chooses **Русский** or **English**. The choice is saved only on the device and used on subsequent visits. Language can be changed anytime in Settings without restarting. Interface language is independent of measurement units, location and data sources. No geolocation permission or account is required during onboarding.
