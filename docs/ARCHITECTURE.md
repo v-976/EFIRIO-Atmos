@@ -32,3 +32,6 @@ Collectors have restricted egress and limited write access to staging. Validatio
 
 ## Non-goals for initial alpha
 Accounts, synchronization, profile migration, payment, advertising, continuous background phone location, unverified minute-accurate rainfall promises and speculative AI training.
+
+## Localization and first launch
+The PWA must provide Russian (ru) and English (en) UI dictionaries from its first release. On the first visit, explicitly ask the user to choose one; store the choice in local device storage, not on the server. On later visits, load the saved choice. Allow instant language switching from Settings. Do not tie UI language to units, coordinates, observation sources or permissions. First-run onboarding must not request geolocation or registration. Design translation keys so more languages can be added later.
