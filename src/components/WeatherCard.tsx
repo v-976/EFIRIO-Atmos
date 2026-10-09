@@ -3,9 +3,14 @@ import type { Settings } from '../settings'
 import type { WeatherState } from '../weather/useWeatherObservation'
 import type { ObservationMeasurement, ObservationVariable } from '../weather/types'
 import type { StationObservation } from '../weather/types'
+import type { SelectedPoint } from './MapView'
+
+export type ObservationTab = 'weather' | 'windPrecipitation' | 'station'
 
 interface WeatherCardProps {
   state: WeatherState
+  activeTab: ObservationTab
+  selectedPoint: SelectedPoint | null
   observation: StationObservation | null
   isManualSelection: boolean
   onUseAutomatic: () => void
@@ -13,15 +18,10 @@ interface WeatherCardProps {
   t: Translate
 }
 
-const DISPLAYED_VARIABLES: ObservationVariable[] = [
-  'temperature',
-  'windSpeed',
-  'windDirection',
-  'humidity',
-  'pressure',
-  'precipitation1h',
-  'precipitationIntensity',
-]
+const TAB_VARIABLES: Record<Exclude<ObservationTab, 'station'>, ObservationVariable[]> = {
+  weather: ['temperature', 'humidity', 'pressure'],
+  windPrecipitation: ['windSpeed', 'windDirection', 'precipitation1h', 'precipitationIntensity'],
+}
 
 function formatDate(value: string, language: Settings['language']): string {
   return new Intl.DateTimeFormat(language === 'ru' ? 'ru-RU' : 'en-GB', {
@@ -51,6 +51,8 @@ function displayMeasurement(measurement: ObservationMeasurement, settings: Setti
 }
 
 export function WeatherCard({
+  activeTab,
+  selectedPoint,
   state,
   observation,
   isManualSelection,
@@ -58,6 +60,10 @@ export function WeatherCard({
   settings,
   t,
 }: WeatherCardProps) {
+  if (!selectedPoint) {
+    return <p className="point-hint">{t('selectPointHint')}</p>
+  }
+
   if (state.status === 'idle') {
     return <div className="data-status">{t('weatherSelectPoint')}</div>
   }
@@ -80,37 +86,79 @@ export function WeatherCard({
     return <div className="data-status data-status--warning">{t('weatherNoStation')}</div>
   }
 
-  return (
-    <section className="weather-card">
-      <div className="station-header">
-        <div>
-          <strong>{observation.station.name}</strong>
-          <span>
-            {observation.station.distanceKm.toFixed(observation.station.distanceKm < 10 ? 1 : 0)} {t('kilometersAway')}
+  if (activeTab === 'station') {
+    return (
+      <section className="weather-card weather-card--details">
+        <dl className="coordinates">
+          <div>
+            <dt>{t('latitude')}</dt>
+            <dd>{selectedPoint.latitude.toFixed(5)}°</dd>
+          </div>
+          <div>
+            <dt>{t('longitude')}</dt>
+            <dd>{selectedPoint.longitude.toFixed(5)}°</dd>
+          </div>
+        </dl>
+
+        <div className="station-header">
+          <div>
+            <strong>{observation.station.name}</strong>
+            <span>
+              {observation.station.distanceKm.toFixed(observation.station.distanceKm < 10 ? 1 : 0)}{' '}
+              {t('kilometersAway')}
+            </span>
+          </div>
+          <span className={`freshness-badge ${observation.isStale ? 'freshness-badge--stale' : ''}`}>
+            {!observation.hasData ? t('noData') : observation.isStale ? t('weatherStale') : t('weatherFresh')}
           </span>
         </div>
-        <span className={`freshness-badge ${observation.isStale ? 'freshness-badge--stale' : ''}`}>
-          {!observation.hasData ? t('noData') : observation.isStale ? t('weatherStale') : t('weatherFresh')}
-        </span>
-      </div>
 
-      <div className="station-selection-row">
-        <span>{isManualSelection ? t('manualSelection') : t('automaticSelection')}</span>
-        {isManualSelection && (
-          <button type="button" onClick={onUseAutomatic}>
-            {t('useAutomaticStation')}
-          </button>
+        <div className="station-selection-row">
+          <span>{isManualSelection ? t('manualSelection') : t('automaticSelection')}</span>
+          {isManualSelection && (
+            <button type="button" onClick={onUseAutomatic}>
+              {t('useAutomaticStation')}
+            </button>
+          )}
+        </div>
+
+        {!observation.hasData ? (
+          <p className="stale-warning">{t('stationNoMeasurements')}</p>
+        ) : (
+          observation.isStale && <p className="stale-warning">{t('weatherStaleWarning')}</p>
         )}
-      </div>
 
-      {!observation.hasData ? (
-        <p className="stale-warning">{t('stationNoMeasurements')}</p>
-      ) : (
-        observation.isStale && <p className="stale-warning">{t('weatherStaleWarning')}</p>
-      )}
+        <dl className="station-details">
+          <div>
+            <dt>{t('lastObservation')}</dt>
+            <dd>
+              {observation.lastObservedAt ? formatDate(observation.lastObservedAt, settings.language) : t('noData')}
+            </dd>
+          </div>
+          <div>
+            <dt>{t('observationQuality')}</dt>
+            <dd>{t('qualityNotProvided')}</dd>
+          </div>
+        </dl>
 
+        <footer className="source-attribution">
+          {t('source')}:{' '}
+          <a href={observation.source.url} target="_blank" rel="noreferrer">
+            FMI
+          </a>{' '}
+          ·{' '}
+          <a href={observation.source.licenseUrl} target="_blank" rel="noreferrer">
+            {observation.source.license}
+          </a>
+        </footer>
+      </section>
+    )
+  }
+
+  return (
+    <section className="weather-card">
       <dl className="measurements">
-        {DISPLAYED_VARIABLES.map((variable) => {
+        {TAB_VARIABLES[activeTab].map((variable) => {
           const measurement = observation.measurements[variable]
           return (
             <div className="measurement" key={variable}>
@@ -125,21 +173,6 @@ export function WeatherCard({
           )
         })}
       </dl>
-
-      <footer className="source-attribution">
-        {t('source')}:{' '}
-        <a href={observation.source.url} target="_blank" rel="noreferrer">
-          FMI
-        </a>{' '}
-        ·{' '}
-        <a href={observation.source.licenseUrl} target="_blank" rel="noreferrer">
-          {observation.source.license}
-        </a>
-        <span>
-          {t('lastObservation')}:{' '}
-          {observation.lastObservedAt ? formatDate(observation.lastObservedAt, settings.language) : t('noData')}
-        </span>
-      </footer>
     </section>
   )
 }

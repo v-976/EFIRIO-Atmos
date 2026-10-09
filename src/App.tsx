@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import { MapView, type SelectedPoint } from './components/MapView'
+import { ObservationPanel } from './components/ObservationPanel'
 import { SettingsPanel } from './components/SettingsPanel'
-import { WeatherCard } from './components/WeatherCard'
+import type { ObservationTab } from './components/WeatherCard'
 import { createTranslator } from './i18n'
 import { loadSettings, saveSettings, type Settings } from './settings'
 import { useWeatherObservation } from './weather/useWeatherObservation'
@@ -11,6 +12,8 @@ export function App() {
   const [settings, setSettings] = useState<Settings>(loadSettings)
   const [selectedPoint, setSelectedPoint] = useState<SelectedPoint | null>(null)
   const [manualStationId, setManualStationId] = useState<string | null>(null)
+  const [isDataPanelOpen, setIsDataPanelOpen] = useState(true)
+  const [activeObservationTab, setActiveObservationTab] = useState<ObservationTab>('weather')
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
   const t = useMemo(() => createTranslator(settings.language), [settings.language])
   const weatherState = useWeatherObservation(selectedPoint)
@@ -24,6 +27,12 @@ export function App() {
   const handlePointSelection = (point: SelectedPoint) => {
     setManualStationId(null)
     setSelectedPoint(point)
+    setIsDataPanelOpen(true)
+  }
+
+  const handleStationSelection = (stationId: string) => {
+    setManualStationId(stationId)
+    setIsDataPanelOpen(true)
   }
 
   useEffect(() => {
@@ -50,7 +59,7 @@ export function App() {
         automaticStationId={searchResult?.automaticStationId || null}
         manualStationId={manualStationId}
         onSelectPoint={handlePointSelection}
-        onSelectStation={setManualStationId}
+        onSelectStation={handleStationSelection}
         t={t}
       />
 
@@ -65,31 +74,20 @@ export function App() {
         </button>
       </header>
 
-      <aside className="point-panel surface" aria-live="polite">
-        <h2>{t('selectedPoint')}</h2>
-        {selectedPoint ? (
-          <dl className="coordinates">
-            <div>
-              <dt>{t('latitude')}</dt>
-              <dd>{selectedPoint.latitude.toFixed(5)}°</dd>
-            </div>
-            <div>
-              <dt>{t('longitude')}</dt>
-              <dd>{selectedPoint.longitude.toFixed(5)}°</dd>
-            </div>
-          </dl>
-        ) : (
-          <p className="point-hint">{t('selectPointHint')}</p>
-        )}
-        <WeatherCard
+      {isDataPanelOpen && (
+        <ObservationPanel
+          activeTab={activeObservationTab}
+          selectedPoint={selectedPoint}
           state={weatherState}
           observation={selectedStation}
           isManualSelection={Boolean(manualStationId)}
+          onActiveTabChange={setActiveObservationTab}
+          onClose={() => setIsDataPanelOpen(false)}
           onUseAutomatic={() => setManualStationId(null)}
           settings={settings}
           t={t}
         />
-      </aside>
+      )}
 
       {isSettingsOpen && (
         <SettingsPanel settings={settings} onChange={setSettings} onClose={() => setIsSettingsOpen(false)} t={t} />

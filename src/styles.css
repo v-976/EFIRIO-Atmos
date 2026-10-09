@@ -124,10 +124,84 @@ select:focus-visible {
 .point-panel {
   bottom: 28px;
   left: 16px;
+  display: flex;
+  flex-direction: column;
   width: min(410px, calc(100vw - 32px));
-  max-height: calc(100dvh - 130px);
+  height: min(680px, calc(100dvh - 130px));
+  overflow: hidden;
+  padding: 0;
+}
+
+.point-panel__header {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 62px;
+  padding: 10px 10px 10px 16px;
+  border-bottom: 1px solid #d9d9d6;
+}
+
+.point-panel__header span {
+  display: block;
+  margin-top: 2px;
+  color: #626568;
+  font-size: 0.7rem;
+}
+
+.panel-close-button {
+  width: 44px;
+  height: 44px;
+  flex: 0 0 auto;
+  border: 0;
+  border-radius: 10px;
+  color: #202225;
+  background: transparent;
+  cursor: pointer;
+  font-size: 1.8rem;
+  line-height: 1;
+}
+
+.panel-close-button:hover {
+  background: #e7e7e3;
+}
+
+.point-panel__content {
+  min-height: 0;
+  flex: 1 1 auto;
+  overflow-x: hidden;
   overflow-y: auto;
-  padding: 16px;
+  padding: 0 16px 16px;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
+}
+
+.tab-indicator {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 26px;
+  padding: 4px 12px 6px;
+  border-top: 1px solid #d9d9d6;
+  background: rgb(250 250 248 / 98%);
+}
+
+.tab-dot {
+  width: 8px;
+  height: 8px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: #a7a9a7;
+  cursor: pointer;
+  transition: width 160ms ease, background-color 160ms ease;
+}
+
+.tab-dot--active {
+  width: 20px;
+  background: #303338;
 }
 
 .point-panel h2,
@@ -202,8 +276,11 @@ select:focus-visible {
 
 .weather-card {
   margin-top: 12px;
-  padding-top: 12px;
-  border-top: 1px solid #d9d9d6;
+}
+
+.weather-card--details .coordinates {
+  margin-top: 0;
+  margin-bottom: 12px;
 }
 
 .station-header {
@@ -328,6 +405,29 @@ select:focus-visible {
 
 .source-attribution span {
   margin-top: 2px;
+}
+
+.station-details {
+  display: grid;
+  gap: 8px;
+  margin: 12px 0 0;
+}
+
+.station-details div {
+  padding: 9px;
+  border-radius: 8px;
+  background: #ececea;
+}
+
+.station-details dt {
+  color: #5c5f62;
+  font-size: 0.68rem;
+}
+
+.station-details dd {
+  margin: 3px 0 0;
+  font-size: 0.78rem;
+  font-weight: 650;
 }
 
 .station-map-key {
@@ -474,7 +574,7 @@ select:focus-visible {
 
 @media (max-width: 640px) {
   .brand-panel {
-    top: 10px;
+    top: max(10px, env(safe-area-inset-top));
     left: 10px;
     min-width: 0;
     width: calc(100% - 20px);
@@ -492,9 +592,22 @@ select:focus-visible {
   }
 
   .point-panel {
-    bottom: 24px;
-    left: 10px;
-    width: calc(100% - 20px);
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 50dvh;
+    border-right: 0;
+    border-bottom: 0;
+    border-left: 0;
+    border-radius: 18px 18px 0 0;
+  }
+
+  .point-panel__content {
+    padding-bottom: 12px;
+  }
+
+  .tab-indicator {
+    padding-bottom: max(6px, env(safe-area-inset-bottom));
   }
 
   .settings-backdrop {
