@@ -1,15 +1,18 @@
 import { useRef, type PointerEvent as ReactPointerEvent } from 'react'
 import type { Translate } from '../i18n'
 import type { Settings } from '../settings'
+import type { ForecastState } from '../forecast/useForecast'
 import type { StationObservation } from '../weather/types'
 import type { WeatherState } from '../weather/useWeatherObservation'
 import type { SelectedPoint } from './MapView'
 import { WeatherCard, type ObservationTab } from './WeatherCard'
+import { ForecastCard } from './ForecastCard'
 
 interface ObservationPanelProps {
   activeTab: ObservationTab
   selectedPoint: SelectedPoint | null
   state: WeatherState
+  forecastState: ForecastState
   observation: StationObservation | null
   isManualSelection: boolean
   onActiveTabChange: (tab: ObservationTab) => void
@@ -19,7 +22,7 @@ interface ObservationPanelProps {
   t: Translate
 }
 
-const TABS: ObservationTab[] = ['weather', 'windPrecipitation', 'station']
+const TABS: ObservationTab[] = ['weather', 'windPrecipitation', 'station', 'forecast']
 const SWIPE_LOCK_THRESHOLD_PX = 10
 const SWIPE_CHANGE_THRESHOLD_PX = 48
 
@@ -35,6 +38,7 @@ export function ObservationPanel({
   activeTab,
   selectedPoint,
   state,
+  forecastState,
   observation,
   isManualSelection,
   onActiveTabChange,
@@ -111,16 +115,20 @@ export function ObservationPanel({
           gestureRef.current = null
         }}
       >
-        <WeatherCard
-          activeTab={activeTab}
-          selectedPoint={selectedPoint}
-          state={state}
-          observation={observation}
-          isManualSelection={isManualSelection}
-          onUseAutomatic={onUseAutomatic}
-          settings={settings}
-          t={t}
-        />
+        {activeTab === 'forecast' ? (
+          <ForecastCard state={forecastState} settings={settings} t={t} />
+        ) : (
+          <WeatherCard
+            activeTab={activeTab}
+            selectedPoint={selectedPoint}
+            state={state}
+            observation={observation}
+            isManualSelection={isManualSelection}
+            onUseAutomatic={onUseAutomatic}
+            settings={settings}
+            t={t}
+          />
+        )}
       </div>
 
       <nav className="tab-indicator" aria-label={t('dataTabs')}>

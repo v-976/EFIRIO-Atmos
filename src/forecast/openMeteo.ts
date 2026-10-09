@@ -128,7 +128,7 @@ function requestUrl(point: GeoPoint): string {
     hourly: HOURLY_VARIABLES,
     forecast_hours: String(FORECAST_HOURS),
     timeformat: 'unixtime',
-    timezone: 'GMT',
+    timezone: 'auto',
     temperature_unit: 'celsius',
     wind_speed_unit: 'ms',
     precipitation_unit: 'mm',

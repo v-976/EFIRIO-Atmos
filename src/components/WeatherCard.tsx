@@ -5,7 +5,7 @@ import type { ObservationMeasurement, ObservationVariable } from '../weather/typ
 import type { StationObservation } from '../weather/types'
 import type { SelectedPoint } from './MapView'
 
-export type ObservationTab = 'weather' | 'windPrecipitation' | 'station'
+export type ObservationTab = 'weather' | 'windPrecipitation' | 'station' | 'forecast'
 
 interface WeatherCardProps {
   state: WeatherState
@@ -18,7 +18,7 @@ interface WeatherCardProps {
   t: Translate
 }
 
-const TAB_VARIABLES: Record<Exclude<ObservationTab, 'station'>, ObservationVariable[]> = {
+const TAB_VARIABLES: Record<Exclude<ObservationTab, 'station' | 'forecast'>, ObservationVariable[]> = {
   weather: ['temperature', 'humidity', 'pressure'],
   windPrecipitation: ['windSpeed', 'windDirection', 'precipitation1h', 'precipitationIntensity'],
 }
@@ -60,6 +60,7 @@ export function WeatherCard({
   settings,
   t,
 }: WeatherCardProps) {
+  if (activeTab === 'forecast') return null
   if (!selectedPoint) {
     return <p className="point-hint">{t('selectPointHint')}</p>
   }

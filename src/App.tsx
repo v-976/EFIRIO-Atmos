@@ -97,6 +97,7 @@ export function App() {
           activeTab={activeObservationTab}
           selectedPoint={selectedPoint}
           state={weatherState}
+          forecastState={forecastState}
           observation={selectedStation}
           isManualSelection={Boolean(manualStationId)}
           onActiveTabChange={setActiveObservationTab}

@@ -403,6 +403,113 @@ select:focus-visible {
   color: #303338;
 }
 
+.forecast-card {
+  margin-top: 12px;
+}
+
+.forecast-provenance {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  padding: 9px 10px;
+  border-radius: 9px;
+  background: #ececea;
+  color: #5c5f62;
+  font-size: 0.68rem;
+}
+
+.forecast-provenance strong {
+  color: #202225;
+  letter-spacing: 0.06em;
+}
+
+.forecast-provenance code {
+  color: #303338;
+  font-size: inherit;
+}
+
+.forecast-hours {
+  display: grid;
+  gap: 6px;
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.forecast-hour {
+  display: grid;
+  grid-template-columns: minmax(76px, auto) 1fr auto;
+  gap: 4px 9px;
+  align-items: center;
+  padding: 8px 9px;
+  border: 1px solid #dededb;
+  border-radius: 8px;
+  background: #f5f5f2;
+  font-size: 0.74rem;
+}
+
+.forecast-hour time,
+.forecast-temperature,
+.forecast-metric {
+  font-variant-numeric: tabular-nums;
+}
+
+.forecast-hour time {
+  color: #505356;
+  font-size: 0.68rem;
+  line-height: 1.25;
+}
+
+.forecast-condition {
+  min-width: 0;
+  font-size: 0.76rem;
+  line-height: 1.2;
+}
+
+.forecast-temperature {
+  font-weight: 750;
+  white-space: nowrap;
+}
+
+.forecast-metric {
+  color: #303338;
+  line-height: 1.25;
+}
+
+.forecast-metric:nth-last-child(2) {
+  grid-column: 2;
+}
+
+.forecast-metric small {
+  display: block;
+  color: #717477;
+  font-size: 0.59rem;
+}
+
+.forecast-footer {
+  display: grid;
+  gap: 7px;
+  margin-top: 11px;
+  color: #64676a;
+  font-size: 0.68rem;
+  line-height: 1.4;
+}
+
+.forecast-footer a,
+.forecast-footer summary {
+  color: #303338;
+}
+
+.forecast-footer summary {
+  width: fit-content;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.forecast-footer details p {
+  margin-top: 5px !important;
+}
+
 .source-attribution span {
   margin-top: 2px;
 }
