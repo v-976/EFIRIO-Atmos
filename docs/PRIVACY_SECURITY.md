@@ -30,3 +30,20 @@ Perform threat modelling, dependency and license audit, configuration review, AP
 
 ## Localization preferences
 The selected interface language is stored locally only. Automatic browser-language detection and optional manual language override require no registration or geolocation. No user language preference is saved server-side.
+
+## Forecast data flow — separation of responsibility
+
+### EFIRIO Atmos itself
+- Has no backend for user profiles.
+- Does not store a history of user-selected coordinates on its own server.
+- Does not collect its own analytics or telemetry.
+- Does not determine geolocation automatically; the user selects the point on the map.
+- Keeps personal settings (language, units) locally on the device.
+
+### Open-Meteo (external forecast provider)
+- To obtain a forecast, the user's browser sends the selected point's coordinates **directly from the client** to Open-Meteo; the request does not pass through an EFIRIO Atmos server.
+- The provider also receives ordinary network metadata of the request, including the client IP address.
+- Processing and retention on the provider side are governed by the provider's own privacy policy and terms, not by EFIRIO Atmos.
+- According to the current official Open-Meteo conditions, technical logs may contain IP addresses and coordinates and may be retained for up to 90 days.
+
+EFIRIO Atmos documents this flow and cannot guarantee that third parties perform no data processing; claims must describe actual behavior rather than promise absolute anonymity or legal conclusions such as "GDPR does not apply".

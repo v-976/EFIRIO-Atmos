@@ -18,6 +18,20 @@ EFIRIO Atmos prioritizes **nearby, trustworthy, recent observations** over gener
 - Sunrise, sunset, daylight, moon phases; solar flares, geomagnetic activity, aurora forecasts and available radiation monitoring.
 - Historical forecast verification, source comparison and adaptive model weighting after sufficient evidence.
 
+## Project model
+
+EFIRIO Atmos is:
+
+- completely free of charge;
+- open-source;
+- non-commercial;
+- without advertising, subscriptions or paid features;
+- without user accounts;
+- without its own user telemetry or tracking;
+- without sale of user data.
+
+The project-owned source code remains licensed under MIT; this is the permanent model of the project.
+
 ## Privacy by design
 
 No accounts, advertising, user profiling or server-side storage of personal preferences, saved locations or location history. Personal settings remain on the device. No cross-device synchronization, profile transfer or profile backup is planned. The server collects **general regional environmental data independently of user requests**. Prefer regional data bundles so precise user coordinates need not be transmitted. Network operators and third-party map providers may still observe connection metadata; privacy must not be overstated.
@@ -44,7 +58,9 @@ Technology selections other than the map stack are provisional. See [Architectur
 
 ## License
 
-Project-owned code is licensed under [MIT](LICENSE). The application is intended to be distributed free of charge and operated non-commercially; MIT itself **does permit third-party commercial reuse**. Third-party datasets, maps, imagery, dependencies and trademarks retain their own terms.
+Project-owned code is licensed under [MIT](LICENSE). The application is intended to be distributed free of charge and operated non-commercially; MIT itself **does permit third-party commercial reuse** of the project-owned source code. Third-party datasets, maps, imagery, dependencies and trademarks retain their own terms.
+
+The EFIRIO Atmos source-code licence does **not** grant any right to use third-party APIs or data in ways that contradict the terms of the corresponding providers. Provider terms, quotas, licences and attribution requirements remain binding on every user and fork, including commercial ones.
 
 ## Development
 
