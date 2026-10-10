@@ -70,13 +70,13 @@ function parseForecastHour(hourly: OpenMeteoHourly, index: number): ForecastHour
   }
 }
 
-function parseResponse(response: OpenMeteoResponse, point: GeoPoint): ForecastResult {
+function parseResponse(response: OpenMeteoResponse, point: GeoPoint, forecastHours = FORECAST_HOURS): ForecastResult {
   if (!response.hourly || !Array.isArray(response.hourly.time)) {
     throw new Error('Open-Meteo response is missing hourly forecast data')
   }
 
   const hours = response.hourly.time
-    .slice(0, FORECAST_HOURS)
+    .slice(0, forecastHours)
     .map((_, index) => parseForecastHour(response.hourly!, index))
     .filter((hour): hour is ForecastHour => Boolean(hour))
 
@@ -121,12 +121,12 @@ function parseResponse(response: OpenMeteoResponse, point: GeoPoint): ForecastRe
   }
 }
 
-function requestUrl(point: GeoPoint): string {
+function requestUrl(point: GeoPoint, forecastHours = FORECAST_HOURS): string {
   const parameters = new URLSearchParams({
     latitude: String(point.latitude),
     longitude: String(point.longitude),
     hourly: HOURLY_VARIABLES,
-    forecast_hours: String(FORECAST_HOURS),
+    forecast_hours: String(forecastHours),
     timeformat: 'unixtime',
     timezone: 'auto',
     temperature_unit: 'celsius',
@@ -154,4 +154,28 @@ export const openMeteoForecastProvider: ForecastProvider = {
     forecastCache.set(key, { expiresAt: Date.now() + CACHE_TTL_MS, result })
     return result
   },
+}
+
+const extendedForecastCache = new Map<string, CachedForecast>()
+
+/** A3-compatible best_match data for analytics; the published 24-hour provider above is unchanged. */
+export async function getOpenMeteoBestMatchForecast(
+  point: GeoPoint,
+  forecastHours: number,
+  signal?: AbortSignal,
+): Promise<ForecastResult> {
+  const key = `${coordinateKey(point)}:${forecastHours}:${HOURLY_VARIABLES}`
+  const cached = extendedForecastCache.get(key)
+  if (cached && cached.expiresAt > Date.now()) return cached.result
+
+  const response = await fetch(requestUrl(point, forecastHours), {
+    method: 'GET',
+    headers: { Accept: 'application/json' },
+    signal,
+  })
+  if (!response.ok) throw new Error(`Open-Meteo request failed with status ${response.status}`)
+
+  const result = parseResponse((await response.json()) as OpenMeteoResponse, point, forecastHours)
+  extendedForecastCache.set(key, { expiresAt: Date.now() + CACHE_TTL_MS, result })
+  return result
 }

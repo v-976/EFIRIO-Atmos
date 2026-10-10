@@ -18,6 +18,22 @@ Local-first environmental intelligence: maximize coverage from permitted nearby 
 ## Data contract (proposed)
 Every measurement should carry `source_id`, `station_id`, `observed_at_utc`, `received_at_utc`, `latitude`, `longitude`, optional `elevation_m`, `variable`, `value`, `unit`, `quality_flags`, `license` and `provenance`. Derived products additionally carry `kind` (observed/estimated/nowcast/forecast), `valid_at_utc`, methodology and uncertainty when available. Preserve original readings and model run identifiers.
 
+### Forecast horizon output contract and user presentation
+
+Forecast products remain distinct from measurements and preserve the source ensemble/model for every period. The future client-facing data contract should provide:
+
+- **Short-term hourly:** UTC timestamp plus point timezone; P10/median/P90 temperature, precipitation amount, wind speed and mean sea-level pressure; member-wise precipitation-event probability.
+- **Daily:** IANA-local date and actual UTC boundary timestamps; temperature range, daily precipitation amount distribution and event probability, typical/maximum wind distributions, pressure range/trend, valid/total member counts and source provenance.
+- **Outlook (days 8–15):** the same daily fields with coarse temporal semantics and explicit long-range source provenance; no implied hourly precision.
+
+Local-day aggregation is derived from Unix timestamps using the selected point's IANA timezone, including DST transitions. A source transition must be represented in provenance. Overlapping ensemble systems remain separate until historical validation supports calibration or blending; agreement is not accuracy or confidence.
+
+The A5.3 browser-side analytics layer has four internal horizons: 0–24 h and 24–72 h hourly, local days 4–7 daily, and local days 8–15 outlook. A3 `best_match` remains central where exact timestamp/variable alignment succeeds; otherwise an explicitly identified ensemble-median fallback is allowed. ICON-EPS provides envelopes through local day 7 and ECMWF IFS ENS provides days 8–15 with a hard, provenance-visible switch and no blending. A4 remains an independent deterministic diagnostic.
+
+Short, extended and long source states fail independently. ECMWF outlook is an explicit lazy operation rather than part of point selection. Daily records remain in the result as unavailable when valid-member or time-coverage policy fails. All analytics remain canonical and unrounded; future presentation rounding must not narrow uncertainty envelopes.
+
+The A6.1 Forecast tab is a presentation consumer of this contract. It adds a keyboard-accessible segmented horizon selector inside the existing Forecast main tab, without changing the mobile panel's cyclic swipe or vertical-scroll architecture. Display-unit and language changes reformat locally and are not forecast request inputs. The UI shows ranges and event probabilities, not ensemble terminology or a confidence score.
+
 ## Location and privacy
 - Manual map click, place search or explicitly authorized browser geolocation.
 - Do not automatically ask for location on app launch.

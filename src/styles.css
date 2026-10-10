@@ -407,83 +407,175 @@ select:focus-visible {
   margin-top: 12px;
 }
 
-.forecast-provenance {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px 10px;
-  padding: 9px 10px;
-  border-radius: 9px;
-  background: #ececea;
-  color: #5c5f62;
-  font-size: 0.68rem;
-}
-
-.forecast-provenance strong {
-  color: #202225;
-  letter-spacing: 0.06em;
-}
-
-.forecast-provenance code {
-  color: #303338;
-  font-size: inherit;
-}
-
-.forecast-hours {
+.forecast-horizon-selector {
   display: grid;
-  gap: 6px;
-  margin: 10px 0 0;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 3px;
+  padding: 3px;
+  border: 1px solid #d6d7d4;
+  border-radius: 11px;
+  background: #ececea;
+  touch-action: manipulation;
+}
+
+.forecast-horizon-button {
+  min-width: 0;
+  min-height: 44px;
+  padding: 5px 4px;
+  border: 0;
+  border-radius: 8px;
+  color: #55585b;
+  background: transparent;
+  cursor: pointer;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.forecast-horizon-button:hover {
+  background: rgb(255 255 255 / 58%);
+}
+
+.forecast-horizon-button--active {
+  color: #202225;
+  background: #fff;
+  box-shadow: 0 1px 4px rgb(32 34 37 / 13%);
+}
+
+.forecast-timezone {
+  margin-top: 8px;
+  color: #66696c;
+  font-size: 0.67rem;
+}
+
+.forecast-hour-groups,
+.forecast-list {
+  display: grid;
+  gap: 7px;
+}
+
+.forecast-hour-groups,
+.forecast-list--daily {
+  margin-top: 10px;
+}
+
+.forecast-day-group h3 {
+  margin: 7px 0 6px;
+  color: #434649;
+  font-size: 0.77rem;
+  letter-spacing: 0.01em;
+}
+
+.forecast-list {
+  margin-bottom: 0;
   padding: 0;
   list-style: none;
 }
 
-.forecast-hour {
-  display: grid;
-  grid-template-columns: minmax(76px, auto) 1fr auto;
-  gap: 4px 9px;
-  align-items: center;
-  padding: 8px 9px;
+.forecast-row {
+  padding: 9px 10px;
   border: 1px solid #dededb;
-  border-radius: 8px;
+  border-radius: 9px;
   background: #f5f5f2;
-  font-size: 0.74rem;
-}
-
-.forecast-hour time,
-.forecast-temperature,
-.forecast-metric {
   font-variant-numeric: tabular-nums;
 }
 
-.forecast-hour time {
-  color: #505356;
-  font-size: 0.68rem;
-  line-height: 1.25;
+.forecast-row__primary {
+  display: grid;
+  grid-template-columns: minmax(58px, auto) auto minmax(0, 1fr);
+  gap: 8px;
+  align-items: baseline;
+}
+
+.forecast-row--daily .forecast-row__primary {
+  grid-template-columns: minmax(92px, 1fr) auto;
+}
+
+.forecast-row__primary time {
+  color: #4e5154;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: capitalize;
+}
+
+.forecast-temperature {
+  font-size: 0.88rem;
+  font-weight: 800;
+  white-space: nowrap;
 }
 
 .forecast-condition {
   min-width: 0;
-  font-size: 0.76rem;
-  line-height: 1.2;
-}
-
-.forecast-temperature {
-  font-weight: 750;
+  overflow: hidden;
+  color: #5b5e61;
+  font-size: 0.67rem;
+  text-align: right;
+  text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.forecast-metric {
+.forecast-row__metrics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px 13px;
+  margin-top: 7px;
+  padding-top: 6px;
+  border-top: 1px solid #e0e0dd;
+}
+
+.forecast-summary-metric {
   color: #303338;
+  font-size: 0.7rem;
   line-height: 1.25;
 }
 
-.forecast-metric:nth-last-child(2) {
-  grid-column: 2;
+.forecast-summary-metric small {
+  margin-right: 4px;
+  color: #717477;
+  font-size: 0.61rem;
 }
 
-.forecast-metric small {
+.forecast-summary-metric em {
+  color: #676a6d;
+  font-size: 0.61rem;
+  font-style: normal;
+}
+
+.forecast-unavailable {
   display: block;
-  color: #717477;
-  font-size: 0.59rem;
+  margin-top: 7px;
+  color: #6a5b3d;
+  font-size: 0.7rem;
+  font-weight: 650;
+}
+
+.forecast-long-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 9px;
+  padding: 10px;
+  border: 1px solid #d6d7d4;
+  border-radius: 9px;
+  color: #505356;
+  background: #f3f3f0;
+  font-size: 0.73rem;
+}
+
+.forecast-long-status--error {
+  justify-content: space-between;
+  color: #702929;
+}
+
+.forecast-long-status button {
+  min-height: 36px;
+  padding: 5px 11px;
+  border: 1px solid #aeb0ad;
+  border-radius: 8px;
+  color: #202225;
+  background: #fff;
+  cursor: pointer;
+  font-size: 0.7rem;
+  font-weight: 700;
 }
 
 .forecast-footer {

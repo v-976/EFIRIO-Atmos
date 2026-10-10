@@ -3,8 +3,7 @@ import { MapView, type SelectedPoint } from './components/MapView'
 import { ObservationPanel } from './components/ObservationPanel'
 import { SettingsPanel } from './components/SettingsPanel'
 import type { ObservationTab } from './components/WeatherCard'
-import { convertForecastHour } from './forecast/units'
-import { useForecast } from './forecast/useForecast'
+import { useUnifiedForecast } from './forecast/useUnifiedForecast'
 import { createTranslator } from './i18n'
 import { loadSettings, saveSettings, type Settings } from './settings'
 import { useWeatherObservation } from './weather/useWeatherObservation'
@@ -19,15 +18,7 @@ export function App() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
   const t = useMemo(() => createTranslator(settings.language), [settings.language])
   const weatherState = useWeatherObservation(selectedPoint)
-  const forecastState = useForecast(selectedPoint)
-  const forecastPreview = useMemo(() => {
-    if (forecastState.status !== 'success' || !forecastState.result.hours[0]) return null
-    return convertForecastHour(
-      forecastState.result.hours[0],
-      settings.temperatureUnit,
-      settings.windSpeedUnit,
-    )
-  }, [forecastState, settings.temperatureUnit, settings.windSpeedUnit])
+  const unifiedForecast = useUnifiedForecast(selectedPoint)
   const searchResult = weatherState.status === 'success' ? weatherState.result : null
   const selectedStation: StationObservation | null = searchResult
     ? searchResult.stations.find(
@@ -64,11 +55,11 @@ export function App() {
   return (
     <main
       className="app"
-      data-forecast-status={forecastState.status}
-      data-forecast-provider={forecastState.status === 'success' ? forecastState.result.provider.id : undefined}
-      data-forecast-hours={forecastState.status === 'success' ? forecastState.result.hours.length : undefined}
-      data-forecast-temperature-unit={forecastPreview?.temperature?.unit}
-      data-forecast-wind-unit={forecastPreview?.windSpeed?.unit}
+      data-forecast-status={unifiedForecast.state.status}
+      data-forecast-provider={unifiedForecast.state.status === 'success' ? 'open-meteo' : undefined}
+      data-forecast-hours={unifiedForecast.state.status === 'success' ? unifiedForecast.state.result.hourly.length : undefined}
+      data-forecast-temperature-unit={settings.temperatureUnit === 'fahrenheit' ? '°F' : '°C'}
+      data-forecast-wind-unit={settings.windSpeedUnit === 'kilometersPerHour' ? 'km/h' : 'm/s'}
     >
       <MapView
         language={settings.language}
@@ -97,7 +88,7 @@ export function App() {
           activeTab={activeObservationTab}
           selectedPoint={selectedPoint}
           state={weatherState}
-          forecastState={forecastState}
+          unifiedForecast={unifiedForecast}
           observation={selectedStation}
           isManualSelection={Boolean(manualStationId)}
           onActiveTabChange={setActiveObservationTab}

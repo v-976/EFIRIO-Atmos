@@ -1,7 +1,7 @@
 import { useRef, type PointerEvent as ReactPointerEvent } from 'react'
 import type { Translate } from '../i18n'
 import type { Settings } from '../settings'
-import type { ForecastState } from '../forecast/useForecast'
+import type { UnifiedForecastController } from '../forecast/useUnifiedForecast'
 import type { StationObservation } from '../weather/types'
 import type { WeatherState } from '../weather/useWeatherObservation'
 import type { SelectedPoint } from './MapView'
@@ -12,7 +12,7 @@ interface ObservationPanelProps {
   activeTab: ObservationTab
   selectedPoint: SelectedPoint | null
   state: WeatherState
-  forecastState: ForecastState
+  unifiedForecast: UnifiedForecastController
   observation: StationObservation | null
   isManualSelection: boolean
   onActiveTabChange: (tab: ObservationTab) => void
@@ -38,7 +38,7 @@ export function ObservationPanel({
   activeTab,
   selectedPoint,
   state,
-  forecastState,
+  unifiedForecast,
   observation,
   isManualSelection,
   onActiveTabChange,
@@ -116,7 +116,7 @@ export function ObservationPanel({
         }}
       >
         {activeTab === 'forecast' ? (
-          <ForecastCard state={forecastState} settings={settings} t={t} />
+          <ForecastCard controller={unifiedForecast} settings={settings} t={t} />
         ) : (
           <WeatherCard
             activeTab={activeTab}

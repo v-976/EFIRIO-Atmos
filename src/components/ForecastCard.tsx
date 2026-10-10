@@ -1,32 +1,162 @@
-import type { ForecastState } from '../forecast/useForecast'
-import { convertForecastHour } from '../forecast/units'
+import { useEffect, useMemo, useState, type PointerEvent as ReactPointerEvent } from 'react'
+import {
+  formatLocalDateLabel,
+  formatPrecipitationAmount,
+  formatPressureRange,
+  formatTemperatureRange,
+  formatWindDirection,
+  formatWindRange,
+  roundProbability,
+} from '../forecast/forecastPresentation'
+import type { UnifiedDailyForecast, UnifiedHourlyForecast } from '../forecast/unifiedForecastTypes'
+import type { UnifiedForecastController } from '../forecast/useUnifiedForecast'
 import { weatherCodeTranslationKey } from '../forecast/weatherCode'
 import type { Translate } from '../i18n'
 import type { Settings } from '../settings'
 
+type ForecastHorizon = '24h' | '3d' | '7d' | '15d'
+
 interface ForecastCardProps {
-  state: ForecastState
+  controller: UnifiedForecastController
   settings: Settings
   t: Translate
 }
 
-function formatForecastTime(value: string, timezone: string, language: Settings['language']): string {
-  return new Intl.DateTimeFormat(language === 'ru' ? 'ru-RU' : 'en-GB', {
-    weekday: 'short',
-    day: '2-digit',
-    month: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    hourCycle: 'h23',
-    timeZone: timezone,
-  }).format(new Date(value))
+const HORIZONS: Array<{ id: ForecastHorizon; label: 'forecastHorizon24' | 'forecastHorizon3' | 'forecastHorizon7' | 'forecastHorizon15' }> = [
+  { id: '24h', label: 'forecastHorizon24' },
+  { id: '3d', label: 'forecastHorizon3' },
+  { id: '7d', label: 'forecastHorizon7' },
+  { id: '15d', label: 'forecastHorizon15' },
+]
+
+function stopPanelSwipe(event: ReactPointerEvent<HTMLDivElement>) {
+  event.stopPropagation()
 }
 
-function formatValue(value: number | null, digits: number, unit: string, noData: string): string {
-  return value === null ? noData : `${value.toFixed(digits)} ${unit}`
+function PrecipitationSummary({
+  forecast,
+  t,
+}: {
+  forecast: UnifiedHourlyForecast['precipitation'] | UnifiedDailyForecast['precipitation']
+  t: Translate
+}) {
+  const probability = roundProbability(forecast.probability)
+  const amount = formatPrecipitationAmount(forecast)
+  if (probability === null && !amount) return null
+  return (
+    <span className="forecast-summary-metric">
+      <small>{t('forecastPrecipitation')}</small>
+      <span>
+        {probability === null ? null : `${probability}%`}
+        {probability !== null && amount ? ' · ' : null}
+        {amount?.text}
+        {amount?.conditional ? <em> {t('forecastConditionalAmount')}</em> : null}
+      </span>
+    </span>
+  )
 }
 
-export function ForecastCard({ state, settings, t }: ForecastCardProps) {
+function HourlyRow({ hour, settings, t }: { hour: UnifiedHourlyForecast; settings: Settings; t: Translate }) {
+  const temperature = formatTemperatureRange(hour.temperature, settings.temperatureUnit)
+  const wind = formatWindRange(hour.wind.speed, settings.windSpeedUnit)
+  const direction = formatWindDirection(hour.wind.direction.value)
+  const pressure = formatPressureRange(hour.pressureMsl)
+
+  return (
+    <li className="forecast-row forecast-row--hourly">
+      <div className="forecast-row__primary">
+        <time dateTime={hour.forecastAt}>{hour.localTime}</time>
+        <strong className="forecast-temperature">{temperature ?? t('noData')}</strong>
+        <span className="forecast-condition">{t(weatherCodeTranslationKey(hour.weatherCode))}</span>
+      </div>
+      {hour.availability === 'unavailable' ? (
+        <span className="forecast-unavailable">{t('forecastInsufficientData')}</span>
+      ) : (
+        <div className="forecast-row__metrics">
+          <PrecipitationSummary forecast={hour.precipitation} t={t} />
+          {wind ? (
+            <span className="forecast-summary-metric">
+              <small>{t('forecastWind')}</small>
+              <span>{wind}{direction ? ` · ${direction}` : ''}</span>
+            </span>
+          ) : null}
+          {pressure ? (
+            <span className="forecast-summary-metric">
+              <small>{t('forecastPressure')}</small>
+              <span>{pressure}</span>
+            </span>
+          ) : null}
+        </div>
+      )}
+    </li>
+  )
+}
+
+function DailyRow({
+  day,
+  baseLocalDate,
+  settings,
+  t,
+}: {
+  day: UnifiedDailyForecast
+  baseLocalDate: string
+  settings: Settings
+  t: Translate
+}) {
+  const temperature = formatTemperatureRange(day.temperature, settings.temperatureUnit)
+  const wind = formatWindRange(day.wind.typicalSpeed, settings.windSpeedUnit)
+  const pressure = formatPressureRange(day.pressureMsl)
+  return (
+    <li className="forecast-row forecast-row--daily">
+      <div className="forecast-row__primary">
+        <time dateTime={day.localDate}>{formatLocalDateLabel(day.localDate, baseLocalDate, settings, t)}</time>
+        <strong className="forecast-temperature">{temperature ?? t('noData')}</strong>
+      </div>
+      {day.availability === 'unavailable' ? (
+        <span className="forecast-unavailable">{t('forecastInsufficientData')}</span>
+      ) : (
+        <div className="forecast-row__metrics">
+          <PrecipitationSummary forecast={day.precipitation} t={t} />
+          {wind ? (
+            <span className="forecast-summary-metric">
+              <small>{t('forecastWind')}</small>
+              <span>{wind}</span>
+            </span>
+          ) : null}
+          {pressure ? (
+            <span className="forecast-summary-metric">
+              <small>{t('forecastPressure')}</small>
+              <span>{pressure}</span>
+            </span>
+          ) : null}
+        </div>
+      )}
+    </li>
+  )
+}
+
+export function ForecastCard({ controller, settings, t }: ForecastCardProps) {
+  const [horizon, setHorizon] = useState<ForecastHorizon>('24h')
+  const { state, loadLongRange } = controller
+  const pointKey = state.status === 'success'
+    ? `${state.result.requestedLocation.latitude},${state.result.requestedLocation.longitude}`
+    : null
+
+  useEffect(() => {
+    if (pointKey) setHorizon('24h')
+  }, [pointKey])
+
+  const groupedHours = useMemo(() => {
+    if (state.status !== 'success') return []
+    const groups = new Map<string, UnifiedHourlyForecast[]>()
+    for (const hour of state.result.hourly) {
+      const group = groups.get(hour.localDate) ?? []
+      group.push(hour)
+      groups.set(hour.localDate, group)
+    }
+    return [...groups.entries()]
+  }, [state])
+
   if (state.status === 'idle') return <div className="data-status">{t('forecastSelectPoint')}</div>
   if (state.status === 'loading') {
     return (
@@ -39,63 +169,80 @@ export function ForecastCard({ state, settings, t }: ForecastCardProps) {
   if (state.status === 'error') {
     return <div className="data-status data-status--error">{t('forecastError')}</div>
   }
-  if (state.result.hours.length === 0) {
-    return <div className="data-status data-status--warning">{t('forecastNoData')}</div>
-  }
 
   const { result } = state
+  const selectHorizon = (next: ForecastHorizon) => {
+    setHorizon(next)
+    if (next === '15d' && state.longStatus === 'not-requested') void loadLongRange()
+  }
+  const hourlyGroups = horizon === '24h'
+    ? [[result.hourly[0]?.localDate ?? result.baseLocalDate, result.hourly.slice(0, 24)] as const]
+    : groupedHours
+  const dailyPeriods = horizon === '15d'
+    ? [...result.dailyOverview, ...(state.longStatus === 'available' ? result.outlook : [])]
+    : result.dailyOverview
+
   return (
-    <section className="forecast-card" aria-label={t('forecast24Hours')}>
-      <div className="forecast-provenance">
-        <strong>{t('forecastDataKind')}</strong>
-        <span>
-          {t('forecastProvider')}: {result.provider.name}
-        </span>
-        <span>
-          {t('forecastSelectionStrategy')}: <code>{result.modelSelection}</code>
-        </span>
-        <span>
-          {t('forecastPointTime')} · {result.timezone}
-        </span>
+    <section className="forecast-card" aria-label={t('forecastDataKind')}>
+      <div
+        className="forecast-horizon-selector"
+        role="group"
+        aria-label={t('forecastHorizon')}
+        onPointerDown={stopPanelSwipe}
+      >
+        {HORIZONS.map((item) => (
+          <button
+            key={item.id}
+            type="button"
+            aria-pressed={horizon === item.id}
+            className={horizon === item.id ? 'forecast-horizon-button forecast-horizon-button--active' : 'forecast-horizon-button'}
+            onClick={() => selectHorizon(item.id)}
+          >
+            {t(item.label)}
+          </button>
+        ))}
       </div>
 
-      <ol className="forecast-hours">
-        {result.hours.map((hour) => {
-          const display = convertForecastHour(hour, settings.temperatureUnit, settings.windSpeedUnit)
-          return (
-            <li className="forecast-hour" key={hour.forecastAt}>
-              <time dateTime={hour.forecastAt}>
-                {formatForecastTime(hour.forecastAt, result.timezone, settings.language)}
-              </time>
-              <strong className="forecast-condition">{t(weatherCodeTranslationKey(hour.weatherCode))}</strong>
-              <span className="forecast-temperature">
-                {display.temperature
-                  ? `${display.temperature.value.toFixed(1)} ${display.temperature.unit}`
-                  : t('noData')}
-              </span>
-              <span className="forecast-metric">
-                <small>{t('forecastPrecipitation')}</small>
-                {hour.precipitationProbability === null
-                  ? formatValue(hour.precipitation, 1, 'mm', t('noData'))
-                  : `${hour.precipitationProbability.toFixed(0)}% · ${formatValue(hour.precipitation, 1, 'mm', t('noData'))}`}
-              </span>
-              <span className="forecast-metric">
-                <small>{t('windSpeed')}</small>
-                {display.windSpeed
-                  ? `${display.windSpeed.value.toFixed(1)} ${display.windSpeed.unit} · ${formatValue(hour.windDirection, 0, '°', t('noData'))}`
-                  : t('noData')}
-              </span>
-            </li>
-          )
-        })}
-      </ol>
+      <div className="forecast-timezone">{t('forecastLocalTimezone')} · {result.timezone}</div>
+
+      {horizon === '24h' || horizon === '3d' ? (
+        <div className="forecast-hour-groups">
+          {hourlyGroups.map(([localDate, hours]) => (
+            <section className="forecast-day-group" key={localDate}>
+              {horizon === '3d' ? (
+                <h3>{formatLocalDateLabel(localDate, result.baseLocalDate, settings, t)}</h3>
+              ) : null}
+              <ol className="forecast-list">
+                {hours.map((hour) => <HourlyRow key={hour.forecastAt} hour={hour} settings={settings} t={t} />)}
+              </ol>
+            </section>
+          ))}
+        </div>
+      ) : (
+        <ol className="forecast-list forecast-list--daily">
+          {dailyPeriods.map((day) => (
+            <DailyRow key={`${day.horizon}-${day.localDate}`} day={day} baseLocalDate={result.baseLocalDate} settings={settings} t={t} />
+          ))}
+        </ol>
+      )}
+
+      {horizon === '15d' && state.longStatus === 'loading' ? (
+        <div className="forecast-long-status" role="status">
+          <span className="status-spinner" aria-hidden="true" />
+          {t('forecastLongLoading')}
+        </div>
+      ) : null}
+      {horizon === '15d' && state.longStatus === 'error' ? (
+        <div className="forecast-long-status forecast-long-status--error" role="alert">
+          <span>{t('forecastLongUnavailable')}</span>
+          <button type="button" onClick={() => void loadLongRange()}>{t('forecastRetry')}</button>
+        </div>
+      ) : null}
 
       <footer className="forecast-footer">
         <span>
-          Weather data by{' '}
-          <a href={result.provider.url} target="_blank" rel="noreferrer">
-            Open-Meteo.com
-          </a>
+          {t('forecastAttribution')}{' '}
+          <a href="https://open-meteo.com/" target="_blank" rel="noreferrer">Open-Meteo.com</a>
         </span>
         <details>
           <summary>{t('forecastPrivacySummary')}</summary>
