@@ -1,4 +1,4 @@
-import type { Translate } from '../i18n'
+import type { Language, Translate } from '../i18n'
 import type { Settings, TemperatureUnit, WindSpeedUnit } from '../settings'
 import type { UnifiedPrecipitation, UnifiedRange } from './unifiedForecastTypes'
 
@@ -92,8 +92,25 @@ export function formatPressureRange(range: UnifiedRange): string | null {
   return `${integerRange(range.lower, range.upper)} hPa`
 }
 
-export function formatWindDirection(value: number | null): string | null {
-  return value === null || !Number.isFinite(value) ? null : `${Math.round(value)}°`
+export interface WindDirectionPresentation {
+  arrow: '↑' | '↗' | '→' | '↘' | '↓' | '↙' | '←' | '↖'
+  label: string
+}
+
+const WIND_ARROWS: WindDirectionPresentation['arrow'][] = ['↑', '↗', '→', '↘', '↓', '↙', '←', '↖']
+const WIND_LABELS: Record<Language, string[]> = {
+  ru: ['С', 'СВ', 'В', 'ЮВ', 'Ю', 'ЮЗ', 'З', 'СЗ'],
+  en: ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'],
+}
+
+export function formatWindDirection(
+  value: number | null,
+  language: Language,
+): WindDirectionPresentation | null {
+  if (value === null || !Number.isFinite(value)) return null
+  const normalized = ((value % 360) + 360) % 360
+  const sector = Math.floor((normalized + 22.5) / 45) % 8
+  return { arrow: WIND_ARROWS[sector], label: WIND_LABELS[language][sector] }
 }
 
 export function formatLocalDateLabel(

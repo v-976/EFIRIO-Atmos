@@ -59,7 +59,7 @@ function PrecipitationSummary({
 function HourlyRow({ hour, settings, t }: { hour: UnifiedHourlyForecast; settings: Settings; t: Translate }) {
   const temperature = formatTemperatureRange(hour.temperature, settings.temperatureUnit)
   const wind = formatWindRange(hour.wind.speed, settings.windSpeedUnit)
-  const direction = formatWindDirection(hour.wind.direction.value)
+  const direction = formatWindDirection(hour.wind.direction.value, settings.language)
   const pressure = formatPressureRange(hour.pressureMsl)
 
   return (
@@ -77,7 +77,12 @@ function HourlyRow({ hour, settings, t }: { hour: UnifiedHourlyForecast; setting
           {wind ? (
             <span className="forecast-summary-metric">
               <small>{t('forecastWind')}</small>
-              <span>{wind}{direction ? ` · ${direction}` : ''}</span>
+              <span>
+                {wind}
+                {direction ? (
+                  <> · <span className="forecast-wind-arrow" aria-hidden="true">{direction.arrow}</span> {direction.label}</>
+                ) : null}
+              </span>
             </span>
           ) : null}
           {pressure ? (
@@ -202,8 +207,6 @@ export function ForecastCard({ controller, settings, t }: ForecastCardProps) {
           </button>
         ))}
       </div>
-
-      <div className="forecast-timezone">{t('forecastLocalTimezone')} · {result.timezone}</div>
 
       {horizon === '24h' || horizon === '3d' ? (
         <div className="forecast-hour-groups">

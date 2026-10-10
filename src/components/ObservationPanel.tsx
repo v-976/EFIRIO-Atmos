@@ -1,4 +1,4 @@
-import { useRef, type PointerEvent as ReactPointerEvent } from 'react'
+import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
 import type { Translate } from '../i18n'
 import type { Settings } from '../settings'
 import type { UnifiedForecastController } from '../forecast/useUnifiedForecast'
@@ -25,6 +25,7 @@ interface ObservationPanelProps {
 const TABS: ObservationTab[] = ['weather', 'windPrecipitation', 'station', 'forecast']
 const SWIPE_LOCK_THRESHOLD_PX = 10
 const SWIPE_CHANGE_THRESHOLD_PX = 48
+const PANEL_DRAG_THRESHOLD_PX = 40
 
 interface GestureState {
   pointerId: number
@@ -32,6 +33,12 @@ interface GestureState {
   startY: number
   currentX: number
   direction: 'horizontal' | 'vertical' | null
+}
+
+interface PanelDragState {
+  pointerId: number
+  startY: number
+  currentY: number
 }
 
 export function ObservationPanel({
@@ -47,7 +54,14 @@ export function ObservationPanel({
   settings,
   t,
 }: ObservationPanelProps) {
+  const [isExpanded, setIsExpanded] = useState(false)
   const gestureRef = useRef<GestureState | null>(null)
+  const panelDragRef = useRef<PanelDragState | null>(null)
+  const suppressHandleClickRef = useRef(false)
+
+  useEffect(() => {
+    setIsExpanded(false)
+  }, [selectedPoint?.latitude, selectedPoint?.longitude])
 
   const changeTab = (offset: number) => {
     const currentIndex = TABS.indexOf(activeTab)
@@ -94,14 +108,72 @@ export function ObservationPanel({
     changeTab(horizontalDistance < 0 ? 1 : -1)
   }
 
+  const startPanelDrag = (event: ReactPointerEvent<HTMLButtonElement>) => {
+    if (!event.isPrimary) return
+    panelDragRef.current = {
+      pointerId: event.pointerId,
+      startY: event.clientY,
+      currentY: event.clientY,
+    }
+    event.currentTarget.setPointerCapture(event.pointerId)
+  }
+
+  const movePanelDrag = (event: ReactPointerEvent<HTMLButtonElement>) => {
+    const drag = panelDragRef.current
+    if (!drag || drag.pointerId !== event.pointerId) return
+    drag.currentY = event.clientY
+    if (Math.abs(drag.currentY - drag.startY) >= SWIPE_LOCK_THRESHOLD_PX) event.preventDefault()
+  }
+
+  const finishPanelDrag = (event: ReactPointerEvent<HTMLButtonElement>) => {
+    const drag = panelDragRef.current
+    panelDragRef.current = null
+    if (!drag || drag.pointerId !== event.pointerId) return
+    const verticalDistance = event.clientY - drag.startY
+    if (Math.abs(verticalDistance) < PANEL_DRAG_THRESHOLD_PX) return
+    suppressHandleClickRef.current = true
+    setIsExpanded(verticalDistance < 0)
+  }
+
+  const togglePanel = () => {
+    if (suppressHandleClickRef.current) {
+      suppressHandleClickRef.current = false
+      return
+    }
+    setIsExpanded((expanded) => !expanded)
+  }
+
+  const closePanel = () => {
+    setIsExpanded(false)
+    onClose()
+  }
+
   return (
-    <aside className="point-panel surface" aria-live="polite">
+    <aside
+      className={isExpanded ? 'point-panel point-panel--expanded surface' : 'point-panel surface'}
+      aria-live="polite"
+    >
+      <button
+        className="panel-handle"
+        type="button"
+        aria-expanded={isExpanded}
+        aria-label={isExpanded ? t('collapseDataPanel') : t('expandDataPanel')}
+        onClick={togglePanel}
+        onPointerDown={startPanelDrag}
+        onPointerMove={movePanelDrag}
+        onPointerUp={finishPanelDrag}
+        onPointerCancel={() => {
+          panelDragRef.current = null
+        }}
+      >
+        <span aria-hidden="true" />
+      </button>
       <header className="point-panel__header">
         <div>
           <h2>{t('selectedPoint')}</h2>
           <span>{t(activeTab)}</span>
         </div>
-        <button className="panel-close-button" type="button" onClick={onClose} aria-label={t('closeDataPanel')}>
+        <button className="panel-close-button" type="button" onClick={closePanel} aria-label={t('closeDataPanel')}>
           <span aria-hidden="true">×</span>
         </button>
       </header>
